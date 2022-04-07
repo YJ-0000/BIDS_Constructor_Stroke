@@ -38,9 +38,7 @@ def get_folders(search_type='directory',**kwargs):
 
 def get_nifti_info(nifti_file):
     path = nifti_file.removesuffix(nifti_file.split('/')[-1])
-    #name = (nifti_file.split('/')[-1]).split('.')[0]
     name = re.split(r"[.][a-zA-Z]", nifti_file.split('/')[-1])[0]
-    print(name)
     i,p,t = name.split('--')
     t = t[:4]+'-'+t[4:6]
     info_nifti = type('', (), {})()
