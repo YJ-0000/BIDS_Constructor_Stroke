@@ -2,6 +2,7 @@ import json
 import yaml
 import logging
 from tqdm import tqdm
+from pathlib import Path
 
 from bids_constructor import check_path, get_folders, convert_dicom_session
 
@@ -11,6 +12,7 @@ if __name__ == '__main__':
     with open("config.yaml", 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     bids_code = json.load(open("bids_code.json", 'r'))
+    
 
     ####### Main Paths ######
     check_path(config["data"]["output_path"])
@@ -21,6 +23,20 @@ if __name__ == '__main__':
     logging.info(f" Processing {number} folder(s) ...")
         
     ####### Loop over folders ######
+    if config["data"]["log"]:
+        with open("Logs.txt", 'w') as log_f:
+            log_f.write("LIST OF FOLDERS WHO COULD NOT BE CONVERTED PROBABLY DUE TO NAME CODING ERROR \n ")
+            log_f.write("============================================================================ \n ")
     for i, f in tqdm(enumerate(folders), total=number):
-        convert_dicom_session(f, config, bids_code)
-
+        try:
+            ## Try Running converting without error ##
+            convert_dicom_session(f, config, bids_code)
+        except:
+            if config["data"]["log"]:
+                ## Report Error ##
+                with open("Logs.txt", 'a') as log_f:
+                    log_f.write(f"Folder: {f} \n")
+            else:
+                pass
+    if config["data"]["log"]:
+        Path("Logs.txt").rename(config["data"]["output_path"]+"Logs.txt")

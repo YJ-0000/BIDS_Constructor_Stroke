@@ -8,6 +8,7 @@ data:
   #output_path: "/home/joan/Documents/Stroke_WUSM/"
   ## Others ##
   gzip: True
+  log: True
 
 # Subject to process
 subjects: 
