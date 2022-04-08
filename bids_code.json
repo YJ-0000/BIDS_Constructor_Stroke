@@ -6,8 +6,14 @@
     "A": {"ID": "PAT", "session": "ses-acute"},
     "C": {"ID": "PAT", "session": "ses-followup"},
     "C2": {"ID": "PAT", "session": "ses-followup-2"},
+    
     "j-": "acq-AP",
     "j": "acq-PA",
+    "i-": "acq-RL",
+    "i": "acq-LR",
+    "k-": "acq-SI",
+    "k": "acq-IS",
+
     "dti": "dwi",
     "MPR": "T1w",
     "MPRAGE": "T1w",

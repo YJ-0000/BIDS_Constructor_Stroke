@@ -12,6 +12,6 @@ data:
 # Subject to process
 subjects: 
   # Folders to process
-  folders: "FCS87*" #"fcs-57c2"
+  folders: "*" #"fcs-57c2"
   # MRI images
   mris: ['anat','dwi','fMRI']
