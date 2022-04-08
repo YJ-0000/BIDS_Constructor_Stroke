@@ -11,5 +11,9 @@
     "dti": "dwi",
     "MPR": "T1w",
     "MPRAGE": "T1w",
-    "BOLD": "fMRI"
+    "BOLD": "fMRI",
+    
+    "WrongNaming": {
+        "587": "87"
+    }
 }

@@ -6,12 +6,12 @@ data:
   ## Thinkpad ##
   #input_path: "/home/joan/Desktop/StrokeDatasetV2/"
   #output_path: "/home/joan/Documents/Stroke_WUSM/"
-  ## Output characteristics ##
+  ## Others ##
   gzip: True
 
 # Subject to process
 subjects: 
   # Folders to process
-  folders: "*" #"fcs-57c2"
+  folders: "FCS87*" #"fcs-57c2"
   # MRI images
   mris: ['anat','dwi','fMRI']
