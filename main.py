@@ -3,6 +3,7 @@ import yaml
 import logging
 from tqdm import tqdm
 from pathlib import Path
+import os
 
 from bids_constructor import check_path, get_folders, convert_dicom_session
 
@@ -25,18 +26,25 @@ if __name__ == '__main__':
     ####### Loop over folders ######
     if config["data"]["log"]:
         with open("Logs.txt", 'w') as log_f:
-            log_f.write("LIST OF FOLDERS WHO COULD NOT BE CONVERTED PROBABLY DUE TO NAME CODING ERROR \n ")
-            log_f.write("============================================================================ \n ")
+            log_f.write("LIST OF FOLDERS WHO COULD NOT BE CONVERTED PROBABLY DUE TO NAME CODING ERROR \n")
+            log_f.write("============================================================================ \n")
     for i, f in tqdm(enumerate(folders), total=number):
         try:
             ## Try Running converting without error ##
             convert_dicom_session(f, config, bids_code)
         except:
+            errors, _ = get_folders(path=config["data"]["output_path"], exclude='txt', search_type='file')
             if config["data"]["log"]:
                 ## Report Error ##
                 with open("Logs.txt", 'a') as log_f:
                     log_f.write(f"Folder: {f} \n")
+                    for e in errors:
+                        log_f.write(f"\t \t{e} \n")
+                        ## Remove Problematic Files ##
+                        os.remove(e)
             else:
                 pass
+    
+    ## Move Logs ##
     if config["data"]["log"]:
         Path("Logs.txt").rename(config["data"]["output_path"]+"Logs.txt")

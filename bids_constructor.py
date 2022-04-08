@@ -36,7 +36,7 @@ def get_folders(search_type='directory',**kwargs):
 
     # Search
     output = Popen(
-        f"find {dicom_path if len(dicom_path)>0 else '.'} -maxdepth 1 -mindepth 1 -type {searches[search_type]} ! -name '.{exclude}' -name '{subjects}'", 
+        f"find {dicom_path if len(dicom_path)>0 else '.'} -maxdepth 1 -mindepth 1 -type {searches[search_type]} ! -name '*.{exclude}' -name '{subjects}'", 
         shell=True, stdout=PIPE
     ).stdout.read()
     folders = str(output).removeprefix('b\'').removesuffix('\'').removesuffix('\\n').split('\\n')
@@ -86,7 +86,7 @@ def convert_dicom_session(f, config, bids_code):
         ).stdout.read()
 
         ## Get nifti info - Prepare file naming ##
-        niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='.tsv')
+        niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='tsv')
         path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
         mri =  re.match(r"dti|MPR|MPRAGE|BOLD", info_niftis.protocol).group()
         if bids_code[mri] == 'dwi':

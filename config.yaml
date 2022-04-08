@@ -1,11 +1,11 @@
 data:
   # Directories
   ## Cla ##
-  input_path: "/home/bam/Joan/StrokeDatasetV2/"
-  output_path: "/home/bam/Joan/Stroke_WUSM/"
+  #input_path: "/home/bam/Joan/StrokeDatasetV2/"
+  #output_path: "/home/bam/Joan/Stroke_WUSM/"
   ## Thinkpad ##
-  #input_path: "/home/joan/Desktop/StrokeDatasetV2/"
-  #output_path: "/home/joan/Documents/Stroke_WUSM/"
+  input_path: "/home/joan/Documents/StrokeTrial/"
+  output_path: "/home/joan/Documents/FCS40/"
   ## Others ##
   gzip: True
   log: True
