@@ -60,7 +60,9 @@ def get_nifti_info(nifti_file, json_data):
     info_nifti.session = re.findall(r"[A-Z0-9]+",re.split(r"\d{2,}", i)[-1].upper())[0]
     info_nifti.protocol, info_nifti.time = p, t
     if len(info_nifti.num_id) == 1:
-        info_nifti.num_id = '0'+info_nifti.num_id
+        info_nifti.num_id = 'sub-0'+info_nifti.num_id
+    else:
+        info_nifti.num_id = 'sub-'+info_nifti.num_id
     return path, name, info_nifti
 
 def organize_niftis(niftis, root_subject, root_name, mri):
