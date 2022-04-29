@@ -69,7 +69,7 @@ def organize_niftis(niftis, root_subject, root_name, mri):
         full_name = root_subject+mri+'/'+root_name+'.'+nifti.split('.')[-1]
         backup = 0
         if os.path.exists(full_name):
-            check_path(root_subject+mri+'/'+'backup/')
+            check_path(root_subject+mri+'/backup/')
             full_name = root_subject+mri+'/backup/'+root_name+'_bck.'+nifti.split('.')[-1]
             backup = 1
         Path(nifti).rename(full_name)
@@ -88,27 +88,27 @@ def convert_dicom_session(f, config, bids_code):
         ## Get nifti info - Prepare file naming ##
         niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='tsv')
         path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
-        mri =  re.match(r"dti|MPR|MPRAGE|BOLD", info_niftis.protocol).group()
+        mri =  re.match(r"dti|MPR|MPRAGE|BOLD|t1_mprage", info_niftis.protocol).group()
         if bids_code[mri] == 'dwi':
             acq = json.load(open(path+name+'.json', 'r'))["PhaseEncodingDirection"]
-            file_name = bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
                 bids_code[info_niftis.session]["session"] + '_' + \
                 bids_code[acq] + '_' + \
                 bids_code[mri]
             mri = bids_code[mri]
             
         elif bids_code[mri] == 'T1w':
-            file_name = bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
                 bids_code[info_niftis.session]["session"] + '_' + \
                 bids_code[mri]
             mri = 'anat'
-        elif bids_code[mri] == 'T1w':
+        elif bids_code[mri] == 'fMRI':
             # TODO: Add BOLD: fMRI (if necessary)
             pass
 
         ## Create subject BIDS directory ##
         subject_folder = config['data']['output_path'] + \
-            bids_code[info_niftis.session]["ID"] + \
+            'sub-' + bids_code[info_niftis.session]["ID"] + \
             info_niftis.num_id + '/' + \
             bids_code[info_niftis.session]["session"]+ '/' 
         new = check_path(subject_folder)
@@ -126,8 +126,8 @@ def convert_dicom_session(f, config, bids_code):
     current_session['ACQ-time'] = info_niftis.time
     current_session['TYPE'] = bids_code[info_niftis.session]["session"]
     current_session['BACKUP'] = backup
-    tsv_name = config['data']['output_path'] + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '/' + \
-        bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '.tsv'
+    tsv_name = config['data']['output_path'] + 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '/' + \
+        'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '.tsv'
     try: #   Non-available Summary from previous folders
         subject_summary = pd.read_csv(tsv_name, sep='\t')
     except: # Available Summary from previous folders

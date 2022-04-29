@@ -18,6 +18,7 @@
     "MPR": "T1w",
     "MPRAGE": "T1w",
     "BOLD": "fMRI",
+    "t1_mprage": "T1w",
     
     "WrongNaming": {
         "587": "87"

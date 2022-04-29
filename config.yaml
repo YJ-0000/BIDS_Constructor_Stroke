@@ -4,8 +4,8 @@ data:
   input_path: "/home/bam/Joan/StrokeDatasetV2/"
   output_path: "/home/bam/Joan/Stroke_WUSM/"
   ## Thinkpad ##
-  #input_path: "/home/joan/Documents/StrokeTrial/"
-  #output_path: "/home/joan/Documents/FCS40/"
+  input_path: "/home/joan/Downloads/PR-43C2/"
+  output_path: "/home/joan/Downloads/43/"
   ## Others ##
   gzip: True
   log: True
@@ -15,4 +15,4 @@ subjects:
   # Folders to process
   folders: "*" #"fcs-57c2"
   # MRI images
-  mris: ['anat','dwi','fMRI']
+  mris: ['anat'] #,'dwi','fMRI']
