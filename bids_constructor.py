@@ -66,11 +66,15 @@ def get_nifti_info(nifti_file, json_data):
 def organize_niftis(niftis, root_subject, root_name, mri):
     # Moving niftis
     for nifti in niftis:
-        full_name = root_subject+mri+'/'+root_name+'.'+nifti.split('.')[-1]
+        if nifti.split('.')[-1] == 'gz':
+            extension = nifti.split('.')[-2] + '.' + nifti.split('.')[-1]
+        else:
+            extension = nifti.split('.')[-1]
+        full_name = root_subject+mri+'/'+root_name+'.'+extension
         backup = 0
         if os.path.exists(full_name):
             check_path(root_subject+mri+'/backup/')
-            full_name = root_subject+mri+'/backup/'+root_name+'_bck.'+nifti.split('.')[-1]
+            full_name = root_subject+mri+'/backup/'+root_name+'_bck.'+extension
             backup = 1
         Path(nifti).rename(full_name)
     return backup
@@ -95,16 +99,19 @@ def convert_dicom_session(f, config, bids_code):
                 bids_code[info_niftis.session]["session"] + '_' + \
                 bids_code[acq] + '_' + \
                 bids_code[mri]
-            mri = bids_code[mri]
-            
+            mri = bids_code[mri]            
         elif bids_code[mri] == 'T1w':
             file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
                 bids_code[info_niftis.session]["session"] + '_' + \
                 bids_code[mri]
             mri = 'anat'
-        elif bids_code[mri] == 'fMRI':
+        elif bids_code[mri] == 'bold':
             # TODO: Add BOLD: fMRI (if necessary)
-            pass
+            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+                bids_code[info_niftis.session]["session"] + '_task-rest_run-' + \
+                str(current_session["fMRI"]) + '_' +\
+                bids_code[mri]
+            mri = 'fMRI'
 
         ## Create subject BIDS directory ##
         subject_folder = config['data']['output_path'] + \
