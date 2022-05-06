@@ -134,7 +134,7 @@ def convert_dicom_session(f, config, bids_code):
     current_session['session_id'] = bids_code[info_niftis.session]["session"]
     current_session['BACKUP'] = backup
     tsv_name = config['data']['output_path'] + 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '/' + \
-        'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '.tsv'
+        'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_sessions.tsv'
     try: #   Non-available Summary from previous folders
         subject_summary = pd.read_csv(tsv_name, sep='\t')
     except: # Available Summary from previous folders
