@@ -83,7 +83,7 @@ def convert_dicom_session(f, config, bids_code):
     dicom_folders, num_dicoms = get_folders(path=f, search_type='directory')
 
     ##### Convert and process each DICOM session ####
-    current_session = {"FOLDER": f.split("/")[-1], "TYPE": '', "anat": 0, "dwi": 0, "fMRI": 0, "ACQ-time": '', "BACKUP": 0}
+    current_session = {"session_id": '', "acq_time": '',"FOLDER": f.split("/")[-1],  "anat": 0, "dwi": 0, "fMRI": 0, "BACKUP": 0}
     for df in dicom_folders:
         output = Popen(
             f"dcm2niix -o {config['data']['output_path']} -f %n--%p--%t -z {'y' if config['data']['gzip'] else 'n'} {df}", shell=True, stdout=PIPE
@@ -130,17 +130,17 @@ def convert_dicom_session(f, config, bids_code):
     
     #### Update Subject Summary ####
     #   Current Session
-    current_session['ACQ-time'] = info_niftis.time
-    current_session['TYPE'] = bids_code[info_niftis.session]["session"]
+    current_session['acq_time'] = info_niftis.time
+    current_session['session_id'] = bids_code[info_niftis.session]["session"]
     current_session['BACKUP'] = backup
     tsv_name = config['data']['output_path'] + 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '/' + \
         'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '.tsv'
     try: #   Non-available Summary from previous folders
         subject_summary = pd.read_csv(tsv_name, sep='\t')
     except: # Available Summary from previous folders
-        subject_summary = pd.DataFrame(columns=['FOLDER', 'TYPE', 'anat', 'dwi', 'fMRI', 'ACQ-time', 'BACKUP'])
+        subject_summary = pd.DataFrame(columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'fMRI', 'BACKUP'])
     #   Combine earlier sessions with current
-    current_session = pd.DataFrame([current_session], columns=['FOLDER', 'TYPE', 'anat', 'dwi', 'fMRI', 'ACQ-time', 'BACKUP'])
+    current_session = pd.DataFrame([current_session], columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'fMRI', 'BACKUP'])
     subject_summary = pd.concat([subject_summary, current_session], ignore_index=True)
     subject_summary.to_csv(tsv_name, sep='\t', index=False)
         
