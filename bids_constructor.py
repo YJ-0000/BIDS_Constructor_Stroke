@@ -81,7 +81,7 @@ def inclusion_or_exclusion_criteria(files, info_files, bids_code):
     """
     
     # CONSIDER ADDING (from) HERE ANY OTHER PROTOCOLS YOU MIGHT NEED OR WANT TO SEARCH 
-    mri = re.match(r"dti|MPR|MPRAGE|BOLD|t1_mprage", info_files.protocol) 
+    mri = re.match(r"dti|MPR|MPRAGE|BOLD|t1_mprage|t2_spc_1mm_p2", info_files.protocol) 
     if not mri == None:
         mri = mri.group()
     
@@ -146,7 +146,7 @@ def convert_dicom_session(f, config, bids_code):
                         bids_code[acq] + '_' + \
                         bids_code[mri]
                     mri = bids_code[mri]            
-                elif bids_code[mri] == 'T1w':
+                elif bids_code[mri] == 'T1w' or bids_code[mri] == 'T2w':
                     file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
                         bids_code[info_niftis.session]["session"] + '_' + \
                         bids_code[mri]

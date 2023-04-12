@@ -1,7 +1,7 @@
 data:
   # Directories
-  input_path: "/home/hippo/Joan/stroke-func-test/"
-  output_path: "/home/hippo/Joan/stroke-func-test/bids-func-test/"
+  input_path: "/media/hippo/D4CEFB44CEFB1D84/stroke/"
+  output_path: "/media/hippo/MULTIBOOT/"
   ## Others ##
   gzip: True
   log: True
@@ -9,6 +9,6 @@ data:
 # Subject to process
 subjects: 
   # Folders to process
-  folders: "fcs-57c2" #"fcs-57c2"
+  folders: "*" #"fcs-57c2"
   # MRI images
   mris: ['anat','dwi','func']

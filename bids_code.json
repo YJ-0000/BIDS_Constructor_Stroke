@@ -19,6 +19,7 @@
     "MPRAGE": "T1w",
     "BOLD": "bold",
     "t1_mprage": "T1w",
+    "t2_spc_1mm_p2": "T2w",
     
     "WrongNaming": {
         "587": "87"
