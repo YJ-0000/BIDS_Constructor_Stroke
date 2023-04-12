@@ -3,8 +3,8 @@ from subprocess import Popen, STDOUT, PIPE
 import os
 import re
 from pathlib import Path
-
 import pandas as pd
+import nibabel as nib
 
 def check_path(path):
     if not os.path.isdir(path):
@@ -63,6 +63,48 @@ def get_nifti_info(nifti_file, json_data):
         info_nifti.num_id = '0'+info_nifti.num_id
     return path, name, info_nifti
 
+def inclusion_or_exclusion_criteria(files, info_files, bids_code):
+    """
+    Define here any criteria you want to consider in order for the BIDS conversion to proceed or not.
+
+    Inputs
+    --------
+    files (list): Contains the files outputted by the dcm2niix software
+    info_files (object): Contains information on the batch of files converted - Obtained from the function get_nifti_info
+    bids_code (dict): Contains information about the coding keys to transform to bids
+
+    Outputs
+    --------
+    proceed (bool): Encoding whether criteria is met for continuation of the conversion
+    mri (str, None): Encodes the type of mri protocol found. 
+                     If None means that no protocol is of interest
+    """
+    
+    # CONSIDER ADDING (from) HERE ANY OTHER PROTOCOLS YOU MIGHT NEED OR WANT TO SEARCH 
+    mri = re.match(r"dti|MPR|MPRAGE|BOLD|t1_mprage", info_files.protocol) 
+    if not mri == None:
+        mri = mri.group()
+    
+        # CONSIDER ADDING ANY OTHER CRITERIA PRESENT IN YOUR DATASET
+        if bids_code[mri] == 'dwi':
+            series = json.load(open([f for f in files if '.json' in f][0], 'r'))["SeriesDescription"]
+            if ('FA' in series) or ('ADC' in series) or ('TENSOR' in series):
+                proceed = False
+            else:
+                proceed = True
+        elif bids_code[mri] == 'bold':
+            data = nib.load([f for f in files if '.nii' in f][0]).get_fdata()
+            if data.shape[-1] >= 100:
+                proceed = True
+            else:
+                proceed = False
+        else:
+            proceed = True
+    else:
+        proceed = False
+    
+    return proceed, mri
+
 def organize_niftis(niftis, root_subject, root_name, mri):
     # Moving niftis
     for nifti in niftis:
@@ -83,50 +125,58 @@ def convert_dicom_session(f, config, bids_code):
     dicom_folders, num_dicoms = get_folders(path=f, search_type='directory')
 
     ##### Convert and process each DICOM session ####
-    current_session = {"session_id": '', "acq_time": '',"FOLDER": f.split("/")[-1],  "anat": 0, "dwi": 0, "fMRI": 0, "BACKUP": 0}
+    current_session = {"session_id": '', "acq_time": '',"FOLDER": f.split("/")[-1],  "anat": 0, "dwi": 0, "func": 0, "BACKUP": 0}
     for df in dicom_folders:
         output = Popen(
             f"dcm2niix -o {config['data']['output_path']} -f %n--%p--%t -z {'y' if config['data']['gzip'] else 'n'} {df}", shell=True, stdout=PIPE
         ).stdout.read()
-
+        
         ## Get nifti info - Prepare file naming ##
-        niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='tsv')
-        path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
-        mri =  re.match(r"dti|MPR|MPRAGE|BOLD|t1_mprage", info_niftis.protocol).group()
-        if bids_code[mri] == 'dwi':
-            acq = json.load(open(path+name+'.json', 'r'))["PhaseEncodingDirection"]
-            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
-                bids_code[info_niftis.session]["session"] + '_' + \
-                bids_code[acq] + '_' + \
-                bids_code[mri]
-            mri = bids_code[mri]            
-        elif bids_code[mri] == 'T1w':
-            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
-                bids_code[info_niftis.session]["session"] + '_' + \
-                bids_code[mri]
-            mri = 'anat'
-        elif bids_code[mri] == 'bold':
-            # TODO: Add BOLD: fMRI (if necessary)
-            file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
-                bids_code[info_niftis.session]["session"] + '_task-rest_run-' + \
-                str(current_session["fMRI"]) + '_' +\
-                bids_code[mri]
-            mri = 'fMRI'
+        niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='t*')
+        if not niftis == ['']:
+            # Succesful DICOM --> NIFTI conversion
+            path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
+            proceed, mri = inclusion_or_exclusion_criteria(niftis, info_niftis, bids_code)
+            
+            if proceed:
+                if bids_code[mri] == 'dwi':
+                    acq = json.load(open(path+name+'.json', 'r'))["PhaseEncodingDirection"]
+                    file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+                        bids_code[info_niftis.session]["session"] + '_' + \
+                        bids_code[acq] + '_' + \
+                        bids_code[mri]
+                    mri = bids_code[mri]            
+                elif bids_code[mri] == 'T1w':
+                    file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+                        bids_code[info_niftis.session]["session"] + '_' + \
+                        bids_code[mri]
+                    mri = 'anat'
+                elif bids_code[mri] == 'bold':
+                    # TODO: Add BOLD: func (if necessary)
+                    file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
+                        bids_code[info_niftis.session]["session"] + '_task-rest_run-' + \
+                        str(current_session["func"]) + '_' +\
+                        bids_code[mri]
+                    mri = 'func'
 
-        ## Create subject BIDS directory ##
-        subject_folder = config['data']['output_path'] + \
-            'sub-' + bids_code[info_niftis.session]["ID"] + \
-            info_niftis.num_id + '/' + \
-            bids_code[info_niftis.session]["session"]+ '/' 
-        new = check_path(subject_folder)
-        if new:
-            bids_tree(subject_folder, mris=config['subjects']['mris'])
+                ## Create subject BIDS directory ##
+                subject_folder = config['data']['output_path'] + \
+                    'sub-' + bids_code[info_niftis.session]["ID"] + \
+                    info_niftis.num_id + '/' + \
+                    bids_code[info_niftis.session]["session"]+ '/' 
+                new = check_path(subject_folder)
+                if new:
+                    bids_tree(subject_folder, mris=config['subjects']['mris'])
 
-        ## Organize nifti files ##   
-        backup = organize_niftis(niftis, subject_folder, file_name, mri)
+                ## Organize nifti files ##   
+                backup = organize_niftis(niftis, subject_folder, file_name, mri)
 
-        ## Update intra-session MRI ##
-        current_session[mri] += 1
+                ## Update intra-session MRI ##
+                current_session[mri] += 1
+            else:
+                # Remove converted files
+                for nf in niftis:
+                    os.remove(nf)    
     
     #### Update Subject Summary ####
     #   Current Session
@@ -138,9 +188,9 @@ def convert_dicom_session(f, config, bids_code):
     try: #   Non-available Summary from previous folders
         subject_summary = pd.read_csv(tsv_name, sep='\t')
     except: # Available Summary from previous folders
-        subject_summary = pd.DataFrame(columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'fMRI', 'BACKUP'])
+        subject_summary = pd.DataFrame(columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'func', 'BACKUP'])
     #   Combine earlier sessions with current
-    current_session = pd.DataFrame([current_session], columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'fMRI', 'BACKUP'])
+    current_session = pd.DataFrame([current_session], columns=['session_id', 'acq_time', 'FOLDER', 'anat', 'dwi', 'func', 'BACKUP'])
     subject_summary = pd.concat([subject_summary, current_session], ignore_index=True)
     subject_summary.to_csv(tsv_name, sep='\t', index=False)
         

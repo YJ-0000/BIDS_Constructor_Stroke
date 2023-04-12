@@ -1,11 +1,7 @@
 data:
   # Directories
-  ## Cla ##
-  input_path: "/home/bam/Joan/StrokeDatasetV2/"
-  output_path: "/home/bam/Joan/Stroke_WUSM/"
-  ## Thinkpad ##
-  input_path: "/home/joan/Downloads/trial/"
-  output_path: "/home/joan/Downloads/44/"
+  input_path: "/home/hippo/Joan/stroke-func-test/"
+  output_path: "/home/hippo/Joan/stroke-func-test/bids-func-test/"
   ## Others ##
   gzip: True
   log: True
@@ -13,6 +9,6 @@ data:
 # Subject to process
 subjects: 
   # Folders to process
-  folders: "*" #"fcs-57c2"
+  folders: "fcs-57c2" #"fcs-57c2"
   # MRI images
-  mris: ['fMRI']
+  mris: ['anat','dwi','func']
