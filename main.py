@@ -32,7 +32,6 @@ if __name__ == '__main__':
             ## Try Running converting without error ##
             convert_dicom_session(f, config, bids_code)
         except:
-            print('fuck')
             errors, _ = get_folders(path=config["data"]["output_path"], exclude='txt', search_type='file')
             if config["data"]["log"]:
                 ## Report Error ##
@@ -41,7 +40,8 @@ if __name__ == '__main__':
                     for e in errors:
                         log_f.write(f"\t \t{e} \n")
                         ## Remove Problematic Files ##
-                        os.remove(e)
+                        if os.path.exists(e):
+                            os.remove(e)
             else:
                 pass
     
