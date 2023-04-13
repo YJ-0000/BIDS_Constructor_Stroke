@@ -23,5 +23,7 @@
     
     "WrongNaming": {
         "587": "87"
-    }
+    },
+
+    "PROTOCOLS": "dti|MPR|MPRAGE|BOLD|t1_mprage|t2_spc_1mm_p2"
 }

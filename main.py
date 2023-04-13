@@ -2,7 +2,6 @@ import json
 import yaml
 import logging
 from tqdm import tqdm
-from pathlib import Path
 import os
 
 from bids_constructor import check_path, get_folders, convert_dicom_session
@@ -33,6 +32,7 @@ if __name__ == '__main__':
             ## Try Running converting without error ##
             convert_dicom_session(f, config, bids_code)
         except:
+            print('fuck')
             errors, _ = get_folders(path=config["data"]["output_path"], exclude='txt', search_type='file')
             if config["data"]["log"]:
                 ## Report Error ##
@@ -47,4 +47,5 @@ if __name__ == '__main__':
     
     ## Move Logs ##
     if config["data"]["log"]:
-        Path("Logs.txt").rename(config["data"]["output_path"]+"Logs.txt")
+        import shutil
+        shutil.copyfile("./Logs.txt", config["data"]["output_path"]+"Logs.txt")
