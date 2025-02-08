@@ -4,44 +4,97 @@ import os
 import re
 from pathlib import Path
 import pandas as pd
+import fnmatch
 
 from criteria import inclusion_or_exclusion_criteria
 
 def check_path(path):
     if not os.path.isdir(path):
-        os.system("mkdir -p {}".format(path))
-        return True
-    else: 
+        try:
+            os.makedirs(path, exist_ok=True)
+            return True
+        except Exception as e:
+            print(f"Error occurs during making directories: {e}")
+            return False
+    else:
         return False
 
 def bids_tree(folder, mris=['anat', 'dwi']):
     for i in range(len(mris)):
         check_path(folder+mris[i]+'/')
 
-def get_folders(search_type='directory',**kwargs):
-    # Folders or files (not both)
-    searches = {'directory': 'd', 'file': 'f'}
-    if search_type not in searches.keys():
-        raise ValueError("Invalid search. Expected one of: %s" % searches.keys())
+def natural_sort_key(s):
+    """
+    문자열을 자연 정렬을 위한 키로 변환합니다.
+    숫자와 문자를 분리하여 숫자는 정수로 변환하고, 문자는 소문자로 변환합니다.
 
-    # Use provided arguments
+    Parameters:
+        s (str): 정렬할 문자열.
+
+    Returns:
+        list: 자연 정렬 키.
+    """
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split('(\d+)', s)]
+
+def get_folders(search_type='directory', **kwargs):
+    """
+    지정된 경로에서 폴더 또는 파일을 검색하고 필터링한 후,
+    자연 정렬을 적용하여 정렬된 목록과 그 수를 반환합니다.
+
+    Parameters:
+        search_type (str): 'directory' 또는 'file' 중 하나.
+        **kwargs: 추가 인자.
+            - config (dict): 구성 사전. 'data.input_path' 및 'subjects.folders' 키를 포함해야 함.
+            - path (str): 검색할 경로. 'config'가 제공되지 않은 경우 사용됨.
+            - exclude (str): 제외할 파일의 확장자.
+
+    Returns:
+        tuple: (정렬된 검색된 경로 목록, 검색된 항목의 수)
+    """
+    # 검색 유형 설정
+    searches = {'directory': 'directory', 'file': 'file'}
+    if search_type not in searches:
+        raise ValueError("Invalid search. Expected one of: %s" % list(searches.keys()))
+
+    # 인자 처리
     try:
         config = kwargs['config']
-        dicom_path, subjects = config["data"]["input_path"], f"*{config['subjects']['folders']}*"
-    except:
-        dicom_path, subjects = kwargs['path'], "*"
-    try:
-        exclude = kwargs['exclude']
-    except:
-        exclude = ""
+        dicom_path = config["data"]["input_path"]
+        subjects = f"*{config['subjects']['folders']}*"
+    except KeyError:
+        dicom_path = kwargs.get('path', '.')
+        subjects = "*"
 
-    # Search
-    output = Popen(
-        f"find {dicom_path if len(dicom_path)>0 else '.'} -maxdepth 1 -mindepth 1 -type {searches[search_type]} ! -name '*.{exclude}' -name '{subjects}'", 
-        shell=True, stdout=PIPE
-    ).stdout.read()
-    folders = str(output).removeprefix('b\'').removesuffix('\'').removesuffix('\\n').split('\\n')
-    return folders, len(folders)
+    exclude = kwargs.get('exclude', "")
+
+    # Path 객체 생성
+    p = Path(dicom_path) if dicom_path else Path('.')
+
+    # 디렉토리 또는 파일 목록 가져오기
+    if search_type == 'directory':
+        entries = [e for e in p.iterdir() if e.is_dir()]
+    elif search_type == 'file':
+        entries = [e for e in p.iterdir() if e.is_file()]
+    else:
+        entries = []
+
+    # 제외 패턴 적용
+    if exclude:
+        exclude_pattern = f"*.{exclude}"
+        entries = [e for e in entries if not fnmatch.fnmatch(e.name, exclude_pattern)]
+
+    # subjects 패턴 적용
+    if subjects:
+        entries = [e for e in entries if fnmatch.fnmatch(e.name, subjects)]
+
+    # 경로를 문자열로 변환
+    folders = [str(e) for e in entries]
+
+    # 자연 정렬 적용
+    folders_sorted = sorted(folders, key=lambda x: natural_sort_key(Path(x).name))
+
+    return folders_sorted, len(folders_sorted)
 
 def check_ID(json_data, ID):
     wrong_names = json_data["WrongNaming"]
@@ -76,7 +129,9 @@ def organize_niftis(niftis, root_subject, root_name, mri):
         if os.path.exists(full_name):
             check_path(root_subject+mri+'/backup/')
             full_name = root_subject+mri+'/backup/'+root_name+'_bck-'+str(backup)+'.'+extension
-            backup += 1
+            while os.path.exists(full_name):
+                full_name = root_subject + mri + '/backup/' + root_name + '_bck-' + str(backup) + '.' + extension
+                backup += 1
         Path(nifti).rename(full_name)
 
     return backup
@@ -99,14 +154,31 @@ def convert_dicom_session(f, config, bids_code):
         
         ## Get nifti info - Prepare file naming ##
         niftis, nums = get_folders(path=config['data']['output_path'], search_type='file', exclude='t*')
-        if not niftis == ['']:
+        if (not niftis == ['']) and (not nums == 0):
             # Succesful DICOM --> NIFTI conversion
-            path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
+            try:
+                path, name, info_niftis = get_nifti_info(niftis[0], bids_code)
+            except:
+                # check if nifitis[0] contains 'localizer' or 'scout'
+                if 'localizer' in niftis[0].lower() or 'scout' in niftis[0].lower():
+                    # Remove converted files
+                    for nf in niftis:
+                        os.remove(nf)
+                    continue
+                else:
+                    # throw error
+                    raise ValueError(f"Error in converted file {niftis[0]} \n")
             proceed, mri = inclusion_or_exclusion_criteria(niftis, info_niftis, bids_code)
             
             if proceed:
                 if bids_code[mri] == 'dwi':
-                    acq = json.load(open(path+name+'.json', 'r'))["PhaseEncodingDirection"]
+                    try:
+                        acq = json.load(open(path+name+'.json', 'r'))["PhaseEncodingDirection"]
+                    except:
+                        # if no PhaseEncodingDirection in json file, remove converted files
+                        for nf in niftis:
+                            os.remove(nf)
+                        continue
                     file_name = 'sub-' + bids_code[info_niftis.session]["ID"] + info_niftis.num_id + '_' + \
                         bids_code[info_niftis.session]["session"] + '_' + \
                         bids_code[acq] + '_' + \
@@ -178,6 +250,10 @@ def convert_dicom_session(f, config, bids_code):
         )
         subject_summary = pd.concat([subject_summary, current_session], ignore_index=True)
         subject_summary.to_csv(tsv_name, sep='\t', index=False)
+
+        if subject_summary['anat'][0] < 2:
+            # throw error that says that the subject does not has either T1w or T2w
+            raise ValueError(f"Subject {bids_code[info_niftis.session]['ID']}{info_niftis.num_id} does not have 2 anatomical images \n")
         
 if __name__ == '__main__':
     pass

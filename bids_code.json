@@ -1,11 +1,11 @@
 {
-    "AMC": {"ID": "CON", "session": "ses-control"},
-    "ACM": {"ID": "CON", "session": "ses-control"},
-    "AMC2": {"ID": "CON", "session": "ses-control-2"},
-    "ACM2": {"ID": "CON", "session": "ses-control-2"},
+    "AMC": {"ID": "CON", "session": "ses-control1"},
+    "ACM": {"ID": "CON", "session": "ses-control1"},
+    "AMC2": {"ID": "CON", "session": "ses-control2"},
+    "ACM2": {"ID": "CON", "session": "ses-control2"},
     "A": {"ID": "PAT", "session": "ses-acute"},
-    "C": {"ID": "PAT", "session": "ses-followup"},
-    "C2": {"ID": "PAT", "session": "ses-followup-2"},
+    "C": {"ID": "PAT", "session": "ses-followup1"},
+    "C2": {"ID": "PAT", "session": "ses-followup2"},
     
     "j-": "acq-AP",
     "j": "acq-PA",
@@ -20,10 +20,12 @@
     "BOLD": "bold",
     "t1_mprage": "T1w",
     "t2_spc_1mm_p2": "T2w",
+    "Hi-res_T2_spc_1mm_p2": "T2w",
     
     "WrongNaming": {
-        "587": "87"
+        "587": "87",
+        "113": "111"
     },
 
-    "PROTOCOLS": "dti|MPR|MPRAGE|BOLD|t1_mprage|t2_spc_1mm_p2"
+    "PROTOCOLS": "dti|MPR|MPRAGE|BOLD|t1_mprage|t2_spc_1mm_p2|Hi-res_T2_spc_1mm_p2"
 }

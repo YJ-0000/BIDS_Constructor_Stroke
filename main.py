@@ -31,7 +31,9 @@ if __name__ == '__main__':
         try:
             ## Try Running converting without error ##
             convert_dicom_session(f, config, bids_code)
-        except:
+        except Exception as ee:
+            print(f"Error in folder {f} \n")
+            print(ee)
             errors, _ = get_folders(path=config["data"]["output_path"], exclude='txt', search_type='file')
             if config["data"]["log"]:
                 ## Report Error ##
